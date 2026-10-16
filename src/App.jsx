@@ -3,7 +3,7 @@ import Casilla from './components/Casilla.jsx'
 
 const FILAS = 6
 const COLUMNAS = 5
-const SOLUCION = 'PERRO'
+const PALABRAS = ['PERRO', 'LIBRO', 'MONTE', 'NIEVE', 'FUEGO']
 
 // Crea un tablero vacío: 6 filas de 5 letras en blanco
 function tableroVacio() {
@@ -81,7 +81,8 @@ function App() {
         <p className="mensaje" role="status">
           {ganada
             ? '¡Enhorabuena, has acertado!'
-            : `La palabra era ${SOLUCION}`}
+            : `La palabra era ${SOLUCION}`
+            }
         </p>
       ) : (
         <button className="boton" type="submit">
