@@ -3,6 +3,7 @@ import Casilla from './components/Casilla.jsx'
 
 const FILAS = 6
 const COLUMNAS = 5
+//mejora 5 palabras
 const PALABRAS = ['PERRO', 'LIBRO', 'MONTE', 'NIEVE', 'FUEGO']
 
 // Crea un tablero vacío: 6 filas de 5 letras en blanco
@@ -30,10 +31,16 @@ function App() {
   const ganada = ultimo === SOLUCION
   const terminada = ganada || filaActual === FILAS
 
+  function reiniciarPartida() {
+  setIntentos(tableroVacio())
+  setFilaActual(0)
+  }
+
   useEffect(() => {
     // Lleva el cursor a la primera casilla en la que se puede escribir
     document.querySelector('.casilla:enabled')?.focus()
   }, [filaActual])
+
 
   function cambiarLetra(f, c, evento) {
     const letra = evento.target.value.toUpperCase()
