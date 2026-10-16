@@ -78,16 +78,14 @@ function App() {
         ))}
       </div>
       {terminada ? (
-        <p className="mensaje" role="status">
-          {ganada
-            ? '¡Enhorabuena, has acertado!'
-            : `La palabra era ${SOLUCION}`
-            }
-        </p>
-      ) : (
-        <button className="boton" type="submit">
-          Comprobar
-        </button>
+        <div className="contenedor-final">
+          <p className="mensaje" role="status">
+            {ganada ? '¡Enhorabuena, has acertado!' : `La palabra era ${solucion}`}
+          </p>
+          <button className="boton" type="button" onClick={reiniciarPartida}>
+            Nueva partida
+          </button>
+        </div>
       )}
     </form>
   )
