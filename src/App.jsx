@@ -3,10 +3,10 @@ import Casilla from './components/Casilla.jsx'
 
 const FILAS = 6
 const COLUMNAS = 5
-//mejora 5 palabras
-const PALABRAS = ['PERRO', 'LIBRO', 'MONTE', 'NIEVE', 'FUEGO']
 
-// Crea un tablero vacío: 6 filas de 5 letras en blanco
+// Lista de palabras de 5 letras
+const PALABRAS = ['PERRO', 'GATOS', 'ARBOL', 'NIEVE', 'PLAYA']
+
 function tableroVacio() {
   const tablero = []
   for (let f = 0; f < FILAS; f++) {
@@ -15,75 +15,128 @@ function tableroVacio() {
   return tablero
 }
 
-// Decide el color de una letra ya comprobada
-function estadoDe(letra, columna) {
-  if (SOLUCION[columna] === letra) return 'correcta'
-  if (SOLUCION.includes(letra)) return 'presente'
-  return 'ausente'
+// falsos repetidos
+function calcularColoresFila(filaIntento, palabraSolucion) {
+  const tamaño = palabraSolucion.length
+  const colores = Array(tamaño).fill('ausente') 
+  const letrasDisponibles = palabraSolucion.split('')
+
+  //Letras en la posición correcta (Verde)
+  for (let i = 0; i < tamaño; i++) {
+    if (filaIntento[i] === palabraSolucion[i]) {
+      colores[i] = 'correcta'
+      letrasDisponibles[i] = null 
+    }
+  }
+
+  //Letras que existen pero en otra posición (Amarillo)
+  for (let i = 0; i < tamaño; i++) {
+    if (colores[i] === 'correcta') continue 
+
+    const letraActual = filaIntento[i]
+    const indexEnSolucion = letrasDisponibles.indexOf(letraActual)
+
+    if (indexEnSolucion !== -1) {
+      colores[i] = 'presente'
+      letrasDisponibles[indexEnSolucion] = null 
+    }
+  }
+
+  return colores
 }
 
 function App() {
   const [intentos, setIntentos] = useState(tableroVacio())
   const [filaActual, setFilaActual] = useState(0)
+  
+  // Palabra aleatoria
+  const [solucion, setSolucion] = useState(() => {
+    return PALABRAS[Math.floor(Math.random() * PALABRAS.length)]
+  })
 
-  // El último intento comprobado, como texto: 'PERRO'
+  // Fila incompleta
+  const [aviso, setAviso] = useState('')
+
   const ultimo = filaActual > 0 ? intentos[filaActual - 1].join('') : ''
-  const ganada = ultimo === SOLUCION
+  const ganada = ultimo === solucion
   const terminada = ganada || filaActual === FILAS
 
-  function reiniciarPartida() {
-  setIntentos(tableroVacio())
-  setFilaActual(0)
-  }
-
   useEffect(() => {
-    // Lleva el cursor a la primera casilla en la que se puede escribir
     document.querySelector('.casilla:enabled')?.focus()
   }, [filaActual])
 
-
   function cambiarLetra(f, c, evento) {
     const letra = evento.target.value.toUpperCase()
-    // Solo aceptamos una letra, o nada si se ha borrado
     if (!/^[A-ZÑ]?$/.test(letra)) return
 
-    // Copiamos el tablero, cambiamos la copia y la guardamos
     const copia = intentos.map((fila) => [...fila])
     copia[f][c] = letra
     setIntentos(copia)
+    if (letra !== '') {
+      const inputs = event.target.closest('.fila').querySelectorAll('.casilla')
+      inputs[c + 1]?.focus()
+    }
+  }
 
-    // Después de escribir una letra, pasamos a la casilla siguiente
-    if (letra !== '') evento.target.nextElementSibling?.focus()
+  // Retroceso y borrado
+  function manejarRetroceso(evento, c) {
+    if (evento.key === 'Backspace' && evento.target.value === '') {
+      const inputs = event.target.closest('.fila').querySelectorAll('.casilla')
+      inputs[c - 1]?.focus()
+    }
   }
 
   function comprobar(evento) {
-    // Evita que el navegador recargue la página al enviar el formulario
     evento.preventDefault()
     if (terminada) return
-    // No se puede comprobar una fila incompleta
-    if (intentos[filaActual].includes('')) return
+    
+    //Aviso si faltan letras
+    setAviso('')
+    if (intentos[filaActual].includes('')) {
+      setAviso('Faltan letras')
+      return
+    }
 
     setFilaActual(filaActual + 1)
+  }
+
+  // Reestablecer tablero
+  function reiniciarPartida() {
+    setIntentos(tableroVacio())
+    setFilaActual(0)
+    setAviso('')
+    setSolucion(PALABRAS[Math.floor(Math.random() * PALABRAS.length)])
   }
 
   return (
     <form className="juego" onSubmit={comprobar}>
       <h1>Wordle</h1>
       <div className="tablero">
-        {intentos.map((fila, f) => (
-          <div className="fila" key={f}>
-            {fila.map((letra, c) => (
-              <Casilla
-                key={c}
-                letra={letra}
-                estado={f < filaActual ? estadoDe(letra, c) : ''}
-                activa={f === filaActual && !terminada}
-                onCambio={(evento) => cambiarLetra(f, c, evento)}
-              />
-            ))}
-          </div>
-        ))}
+        {intentos.map((fila, f) => {
+          // Colores de la mejora 5
+          const coloresFila = f < filaActual ? calcularColoresFila(fila, solucion) : []
+
+          return (
+            <div className="fila" key={f}>
+              {fila.map((letra, c) => (
+                <Casilla
+                  key={c}
+                  letra={letra}
+                  estado={f < filaActual ? coloresFila[c] : ''}
+                  activa={f === filaActual && !terminada}
+                  onCambio={(evento) => cambiarLetra(f, c, evento)}
+                  onKeyDown={(evento) => manejarRetroceso(evento, c)} // [MEJORA 4] Pasa el índice de columna
+                />
+              ))}
+            </div>
+          )
+        })}
       </div>
+
+      {/*condicional del aviso de error */}
+      {aviso && <p className="aviso" style={{ color: 'red', fontWeight: 'bold' }}>{aviso}</p>}
+
+      {/* mensaje de partida finalizada y boton de partida nueva */}
       {terminada ? (
         <div className="contenedor-final">
           <p className="mensaje" role="status">
@@ -93,13 +146,13 @@ function App() {
             Nueva partida
           </button>
         </div>
+      ) : (
+        <button className="boton" type="submit">
+          Comprobar
+        </button>
       )}
     </form>
   )
 }
 
 export default App
-
-
-
-
