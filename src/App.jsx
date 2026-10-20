@@ -125,7 +125,7 @@ function App() {
                   estado={f < filaActual ? coloresFila[c] : ''}
                   activa={f === filaActual && !terminada}
                   onCambio={(evento) => cambiarLetra(f, c, evento)}
-                  onKeyDown={(evento) => manejarRetroceso(evento, c)} // [MEJORA 4] Pasa el índice de columna
+                  onKeyDown={(evento) => manejarRetroceso(evento, c)} // Pasa el índice de columna
                 />
               ))}
             </div>
